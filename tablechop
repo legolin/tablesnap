@@ -15,6 +15,12 @@ from dateutil import parser as dtparser
 
 now = None
 
+def boto_connect_s3(key=None, secret=None):
+    if not all(key, secret):
+        return boto.connect_s3()
+    else:
+        return boto.connect_s3(key, secret)
+
 def days_ago(tstamp):
     global now
     if now is None:
@@ -33,7 +39,7 @@ def clean_backups(args, log):
         args.name = socket.getfqdn()
 
     try:
-        s3conn = boto.connect_s3(args.key, args.secret)
+        s3conn = boto_connect_s3(args.key, args.secret)
         bucket = s3conn.get_bucket(args.bucket)
     except boto.exception.BotoServerError, e:
         log.error('Problem initializing S3 connection: %s', e)
@@ -116,13 +122,11 @@ def main(log):
     parser.add_argument(
         '-k',
         '--key',
-        required=True,
         dest='key',
         help='Amazon S3 Key')
     parser.add_argument(
         '-s',
         '--secret',
-        required=True,
         dest='secret',
         help='Amazon S3 Secret')
     parser.add_argument(
